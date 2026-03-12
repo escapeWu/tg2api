@@ -1,0 +1,21 @@
+services:
+  tg2fastapi:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: tg2fastapi
+    ports:
+      - "8101:8101"
+    volumes:
+      - ./subscribers:/app/subscribers
+      - ./logs:/app/logs
+      - ./tg_session.session:/app/tg_session.session
+    env_file:
+      - ./.env
+    restart: unless-stopped
+    networks:
+      - aitrade-network
+
+networks:
+  aitrade-network:
+    external: true
