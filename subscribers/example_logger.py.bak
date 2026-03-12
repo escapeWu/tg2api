@@ -1,0 +1,19 @@
+from app.logging_config import get_logger
+from app.models import TGMessage
+from app.pubsub.subscriber import Subscriber
+
+logger = get_logger("example_logger")
+
+
+class ExampleLoggerSubscriber(Subscriber):
+    """Example subscriber that logs incoming messages.
+
+    This demonstrates how to create a custom subscriber.
+    Copy this file and modify to implement your own forwarding logic.
+    """
+
+    async def send(self, message: TGMessage) -> None:
+        logger.info(
+            f"[ExampleLogger] @{message.channel} (ID:{message.message_id}): "
+            f"{message.text[:80]}..."
+        )

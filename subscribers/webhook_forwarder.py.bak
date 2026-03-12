@@ -1,0 +1,37 @@
+import httpx
+
+from app.config import settings
+from app.logging_config import get_logger
+from app.models import TGMessage
+from app.pubsub.subscriber import Subscriber
+
+logger = get_logger("webhook_forwarder")
+
+
+class WebhookSubscriber(Subscriber):
+    """Forwards messages to a webhook URL via HTTP POST.
+
+    Configured via the WEBHOOK_URL environment variable.
+    """
+
+    def __init__(self, url: str | None = None) -> None:
+        self._url = url or settings.WEBHOOK_URL
+
+    @property
+    def name(self) -> str:
+        return f"WebhookSubscriber({self._url})"
+
+    async def send(self, message: TGMessage) -> None:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    self._url,
+                    json=message.model_dump(),
+                    timeout=5.0,
+                )
+                if response.status_code == 200:
+                    logger.info(f"Forwarded to {self._url}")
+                else:
+                    logger.error(f"Webhook returned status {response.status_code}")
+            except Exception:
+                logger.exception(f"Failed to forward to {self._url}")

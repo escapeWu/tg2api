@@ -1,0 +1,45 @@
+import httpx
+
+from app.config import settings
+from app.logging_config import get_logger
+from app.models import TGMessage
+from app.pubsub.subscriber import Subscriber
+
+logger = get_logger("sentiment_api")
+
+
+class SentimentApiSubscriber(Subscriber):
+
+    def __init__(self) -> None:
+        self._url = settings.SENTIMENT_API_URL
+        self._key = settings.SENTIMENT_API_KEY
+
+    async def send(self, message: TGMessage) -> None:
+        if not self._url or not self._key:
+            return
+
+        lines = message.text.strip().splitlines()
+        title = lines[0] if lines else f"{message.channel}-{message.message_id}"
+
+        payload = {
+            "title": title,
+            "content": message.text,
+            "opinion": "",
+            "create_time": message.date,
+            "relation": message.channel,
+        }
+
+        async with httpx.AsyncClient() as client:
+            try:
+                resp = await client.post(
+                    f"{self._url}/api/sentiment",
+                    json=payload,
+                    headers={"Authorization": f"Bearer {self._key}"},
+                    timeout=10.0,
+                )
+                if resp.status_code == 200:
+                    logger.info(f"Sent to sentiment API: {title[:50]}")
+                else:
+                    logger.error(f"Sentiment API returned {resp.status_code}: {resp.text}")
+            except Exception:
+                logger.exception("Failed to send to sentiment API")

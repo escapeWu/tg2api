@@ -1,0 +1,15 @@
+[project]
+name = "tg2fastapi"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.129.1",
+    "httpx>=0.28.1",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.7.0",
+    "pysocks>=1.7.1",
+    "telethon>=1.42.0",
+    "uvicorn>=0.41.0",
+]
